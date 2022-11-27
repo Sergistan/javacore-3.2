@@ -12,7 +12,7 @@ public class Main {
         GameProgress game3 = new GameProgress(99, 2, 10, 7.0);
 
         final List<String> srcFiles = Arrays.asList("D://GamesNet/savegames/save1.dat",
-                "D://GamesNet/savegames/save2.dat",  "D://GamesNet/savegames/save3.dat");
+                "D://GamesNet/savegames/save2.dat", "D://GamesNet/savegames/save3.dat");
 
         saveGame("D://GamesNet/savegames/save1.dat", game1);
         saveGame("D://GamesNet/savegames/save2.dat", game2);
@@ -23,6 +23,8 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        deleteFiles(srcFiles);
     }
 
     static void saveGame(String absolutePath, GameProgress game) {
@@ -38,28 +40,34 @@ public class Main {
     }
 
     static void zipFiles(String pathToZip, List<String> srcFiles) throws IOException {
-        try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(pathToZip)))
-        {
+        try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(pathToZip))) {
+            for (String srcFile : srcFiles) {
+                File fileToZip = new File(srcFile);
+                FileInputStream fis = new FileInputStream(fileToZip);
+                ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
+                zipOut.putNextEntry(zipEntry);
+
+                byte[] bytes = new byte[1024];
+                int length;
+                while ((length = fis.read(bytes)) >= 0) {
+                    zipOut.write(bytes, 0, length);
+                }
+                fis.close();
+            }
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    static void deleteFiles(List<String> srcFiles) {
         for (String srcFile : srcFiles) {
             File fileToZip = new File(srcFile);
-            FileInputStream fis = new FileInputStream(fileToZip);
-            ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
-            zipOut.putNextEntry(zipEntry);
-
-            byte[] bytes = new byte[1024];
-            int length;
-            while ((length = fis.read(bytes)) >= 0) {
-                zipOut.write(bytes, 0, length);
-            }
-            fis.close();
-            if (fileToZip.delete()){
+            if (fileToZip.delete()) {
                 System.out.println("Файл " + fileToZip.getName() + " вне архива удален");
             } else {
                 System.out.println("Файл " + fileToZip.getName() + " вне архива не удален");
             }
         }
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }
     }
 }
+
